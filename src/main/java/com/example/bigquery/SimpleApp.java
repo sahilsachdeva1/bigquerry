@@ -17,25 +17,78 @@ package com.example.bigquery;
 // [START imports]
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryOptions;
-import com.google.cloud.bigquery.Dataset;
-import com.google.cloud.bigquery.DatasetInfo;
+import com.google.cloud.bigquery.FieldValue;
+import com.google.cloud.bigquery.Job;
+import com.google.cloud.bigquery.JobId;
+import com.google.cloud.bigquery.JobInfo;
+import com.google.cloud.bigquery.QueryJobConfiguration;
+import com.google.cloud.bigquery.QueryResponse;
+import com.google.cloud.bigquery.QueryResult;
+
+import java.util.List;
+import java.util.UUID;
 // [END imports]
 
 public class SimpleApp {
   public static void main(String... args) throws Exception {
     // [START create_client]
     BigQuery bigquery = BigQueryOptions.getDefaultInstance().getService();
- // The name for the new dataset
-    String datasetName = "my_new_dataset";
+    // [END create_client]
+    // [START run_query]
+    QueryJobConfiguration queryConfig =
+        QueryJobConfiguration.newBuilder(
+                "SELECT "
+                    + "APPROX_TOP_COUNT(corpus, 10) as title, "
+                    + "COUNT(*) as unique_words "
+                    + "FROM `bigquery-public-data.samples.shakespeare`;")
+            // Use standard SQL syntax for queries.
+            // See: https://cloud.google.com/bigquery/sql-reference/
+            .setUseLegacySql(false)
+            .build();
 
-    // Prepares a new dataset
-    Dataset dataset = null;
-    DatasetInfo datasetInfo = DatasetInfo.newBuilder(datasetName).build();
+    // Create a job ID so that we can safely retry.
+    JobId jobId = JobId.of(UUID.randomUUID().toString());
+    Job queryJob = bigquery.create(JobInfo.newBuilder(queryConfig).setJobId(jobId).build());
 
-    // Creates the dataset
-    dataset = bigquery.create(datasetInfo);
+    // Wait for the query to complete.
+    queryJob = queryJob.waitFor();
 
-    System.out.printf("Dataset %s created.%n", dataset.getDatasetId().getDataset());
+    // Check for errors
+    if (queryJob == null) {
+      throw new RuntimeException("Job no longer exists");
+    } else if (queryJob.getStatus().getError() != null) {
+      // You can also look at queryJob.getStatus().getExecutionErrors() for all
+      // errors, not just the latest one.
+      throw new RuntimeException(queryJob.getStatus().getError().toString());
+    }
+
+    // Get the results.
+    QueryResponse response = bigquery.getQueryResults(jobId);
+    // [END run_query]
+
+    // [START print_results]
+    QueryResult result = response.getResult();
+
+    // Print all pages of the results.
+    while (result != null) {
+      for (List<FieldValue> row : result.iterateAll()) {
+        List<FieldValue> titles = row.get(0).getRepeatedValue();
+        System.out.println("titles:");
+
+        for (FieldValue titleValue : titles) {
+          List<FieldValue> titleRecord = titleValue.getRecordValue();
+          String title = titleRecord.get(0).getStringValue();
+          long uniqueWords = titleRecord.get(1).getLongValue();
+          System.out.printf("\t%s: %d\n", title, uniqueWords);
+        }
+
+        long uniqueWords = row.get(1).getLongValue();
+        System.out.printf("total unique words: %d\n", uniqueWords);
+      }
+
+      result = result.getNextPage();
+    }
+    // [END print_results]
   }
 }
 // [END all]
