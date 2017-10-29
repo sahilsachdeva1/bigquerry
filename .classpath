@@ -34,5 +34,32 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="lib" path="C:/Users/sony/Downloads/guava-23.1-jre.jar"/>
+	<classpathentry kind="lib" path="C:/Users/sony/.m2/repository/com/google/cloud/google-cloud-bigquery/0.26.0-beta/google-cloud-bigquery-0.26.0-beta.jar">
+		<attributes>
+			<attribute name="maven.pomderived" value="true"/>
+			<attribute name="maven.groupId" value="com.google.cloud"/>
+			<attribute name="maven.artifactId" value="google-cloud-bigquery"/>
+			<attribute name="maven.version" value="0.26.0-beta"/>
+			<attribute name="maven.scope" value="compile"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="C:/Users/sony/.m2/repository/com/google/appengine/appengine-api-1.0-sdk/1.9.56/appengine-api-1.0-sdk-1.9.56.jar">
+		<attributes>
+			<attribute name="maven.pomderived" value="true"/>
+			<attribute name="maven.groupId" value="com.google.appengine"/>
+			<attribute name="maven.artifactId" value="appengine-api-1.0-sdk"/>
+			<attribute name="maven.version" value="1.9.56"/>
+			<attribute name="maven.scope" value="compile"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="C:/Users/sony/.m2/repository/com/google/auto/value/auto-value/1.2/auto-value-1.2.jar" sourcepath="C:/Users/sony/.m2/repository/com/google/auto/value/auto-value/1.2/auto-value-1.2-sources.jar">
+		<attributes>
+			<attribute name="maven.pomderived" value="true"/>
+			<attribute name="maven.groupId" value="com.google.auto.value"/>
+			<attribute name="maven.artifactId" value="auto-value"/>
+			<attribute name="maven.version" value="1.2"/>
+			<attribute name="maven.scope" value="compile"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

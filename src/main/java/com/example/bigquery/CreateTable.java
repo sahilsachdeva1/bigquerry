@@ -19,16 +19,28 @@ import java.io.FileInputStream;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.cloud.bigquery.BigQuery;
+import com.google.cloud.bigquery.BigQuery.QueryOption;
+import com.google.cloud.bigquery.BigQuery.QueryResultsOption;
+import com.google.cloud.bigquery.BigQueryError;
 import com.google.cloud.bigquery.BigQueryOptions;
+import com.google.cloud.bigquery.DatasetInfo;
 import com.google.cloud.bigquery.Field;
+import com.google.cloud.bigquery.FieldValueList;
+import com.google.cloud.bigquery.InsertAllRequest;
+import com.google.cloud.bigquery.InsertAllResponse;
 import com.google.cloud.bigquery.LegacySQLTypeName;
+import com.google.cloud.bigquery.QueryJobConfiguration;
+import com.google.cloud.bigquery.QueryResponse;
 import com.google.cloud.bigquery.Schema;
 import com.google.cloud.bigquery.StandardTableDefinition;
-import com.google.cloud.bigquery.Table;
 import com.google.cloud.bigquery.TableId;
 import com.google.cloud.bigquery.TableInfo;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 // [END imports]
+import java.util.Map.Entry;
 
 public class CreateTable {
 	public static void main(String... args) throws Exception {
@@ -42,16 +54,38 @@ public class CreateTable {
 
 		BigQuery bigquery = BigQueryOptions.newBuilder().setCredentials(credentials).build().getService();
 
-		TableId tableId = TableId.of("my_new_dataset", "my_table_id");
+		String datasetId = "data_set_created";
+		bigquery.create(DatasetInfo.newBuilder(datasetId).build());
+
+		TableId tableId = TableId.of(datasetId, "Table_sahil_created");
 		// Table field definition
 		Field stringField = Field.of("StringField", LegacySQLTypeName.STRING);
 		// Table schema definition
 		Schema schema = Schema.of(stringField);
 		// Create a table
 		StandardTableDefinition tableDefinition = StandardTableDefinition.of(schema);
-		Table createdTable = bigquery.create(TableInfo.of(tableId, tableDefinition));
-		System.out.println("Table created");
+		bigquery.create(TableInfo.of(tableId, tableDefinition));
 
+		TableId tableId1 = TableId.of("data_set_created", "Table_sahil_created");
+		// Values of the row to insert
+		Map<String, Object> rowContent = new HashMap<>();
+		rowContent.put("booleanField", true);
+		// Bytes are passed in base64
+		rowContent.put("bytesField", "Cg0NDg0="); // 0xA, 0xD, 0xD, 0xE, 0xD in base64
+		// Records are passed as a map
+		Map<String, Object> recordsContent = new HashMap<>();
+		recordsContent.put("stringField", "Hello, World!");
+		rowContent.put("recordField", recordsContent);
+		InsertAllResponse response = bigquery
+				.insertAll(InsertAllRequest.newBuilder(tableId1).addRow("rowId", rowContent)
+						// More rows can be added in the same RPC by invoking .addRow() on the builder
+						.build());
+		if (response.hasErrors()) {
+			// If any of the insertions failed, this lets you inspect the errors
+			for (Entry<Long, List<BigQueryError>> entry : response.getInsertErrors().entrySet()) {
+				// inspect row error
+			}
+		}
 	}
 }
 // [END all]
